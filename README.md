@@ -2,7 +2,7 @@
 
 Manage the cache settings and perform purge operations
 
-![AI App Tray Banner](/assets/banner-1544x500.jpg)
+![Banner](/assets/banner-1544x500.jpg)
 
 ## Installation
 
