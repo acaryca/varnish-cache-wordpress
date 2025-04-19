@@ -1,0 +1,205 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Varnish Cache\n"
+"POT-Creation-Date: 2025-04-19 18:18-0400\n"
+"PO-Revision-Date: 2025-04-19 18:25-0400\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr_CA\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.5\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-Flags-xgettext: --add-comments=translators:\n"
+"X-Poedit-WPHeader: varnishcache.php\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
+"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-SearchPathExcluded-0: *.min.js\n"
+"X-Poedit-SearchPathExcluded-1: includes/plugin-update-checker/vendor\n"
+
+#. Plugin Name of the plugin/theme
+#: admin/admin.php:48 admin/admin.php:49
+msgid "Varnish Cache"
+msgstr "Varnish Cache"
+
+#: admin/admin.php:74
+msgid "Cache"
+msgstr "Cache"
+
+#: admin/admin.php:80 admin/admin.php:83
+msgid "Purge All Cache"
+msgstr "Vider la cache"
+
+#: admin/admin.php:89 admin/admin.php:118 admin/admin.php:143
+msgid "Settings"
+msgstr "Paramètres"
+
+#: admin/admin.php:129 admin/admin.php:234 admin/admin.php:422
+msgid "Sorry, you do not have permission to access this page."
+msgstr "Désolé, vous n'avez pas l'autorisation d'accéder à cette page."
+
+#: admin/admin.php:146
+msgid "Tools"
+msgstr "Outils"
+
+#: admin/admin.php:155
+msgid "Enable Varnish Cache"
+msgstr "Activer la cache Varnish"
+
+#: admin/admin.php:158
+msgid "Enable or disable Varnish Cache integration."
+msgstr "Activer ou désactiver l'intégration de la cache Varnish."
+
+#: admin/admin.php:162
+msgid "Varnish Server"
+msgstr "Serveur Varnish"
+
+#: admin/admin.php:165
+msgid "Varnish server address (e.g. localhost:6081)."
+msgstr "Adresse du serveur Varnish (par exemple, localhost:6081)."
+
+#: admin/admin.php:169
+msgid "Cache Lifetime"
+msgstr "Durée de vie de la cache"
+
+#: admin/admin.php:172
+msgid "Cache lifetime in seconds."
+msgstr "Durée de vie de la cache en secondes."
+
+#: admin/admin.php:176
+msgid "Cache Tag Prefix"
+msgstr "Préfixe des balises de cache"
+
+#: admin/admin.php:179
+msgid "Prefix for cache tags."
+msgstr "Préfixe pour les balises de cache."
+
+#: admin/admin.php:183
+msgid "Excluded Params"
+msgstr "Paramètres exclus"
+
+#: admin/admin.php:186
+msgid "List of GET parameters to disable caching. Separate with commas."
+msgstr ""
+"Liste des paramètres GET pour désactiver la mise en cache. Séparer par des "
+"virgules."
+
+#: admin/admin.php:190
+msgid "Excludes"
+msgstr "Non inclus"
+
+#: admin/admin.php:193
+msgid "URLs that Varnish Cache shouldn't cache. One URL per line."
+msgstr ""
+"URLs que Varnish Cache ne doit pas mettre en cache. Une URL par ligne."
+
+#: admin/admin.php:197
+msgid "Development Mode"
+msgstr "Mode développement"
+
+#: admin/admin.php:200
+msgid "Enable development mode (disables cache)."
+msgstr "Active le mode développement (désactive la cache)."
+
+#: admin/admin.php:209
+msgid "Cache Management"
+msgstr "Gestion du cache"
+
+#: admin/admin.php:210
+msgid "Use these tools to manage your Varnish Cache."
+msgstr "Utilisez ces outils pour gérer votre cache Varnish."
+
+#: admin/admin.php:214
+msgid "Purge Entire Cache"
+msgstr "Purger tout la cache"
+
+#: admin/admin.php:216
+msgid "Purges all cached content from Varnish."
+msgstr "Purge tous les contenus mis en cache par Varnish."
+
+#: admin/admin.php:253
+msgid "Settings saved successfully."
+msgstr "Les paramètres ont été enregistrés avec succès."
+
+#: admin/admin.php:368
+msgid "No Varnish server configured."
+msgstr "Aucun serveur Varnish n'est configuré."
+
+#: admin/admin.php:399
+#, php-format
+msgid "Varnish Cache Purge Failed: %s"
+msgstr "Échec de la purge du cache Varnish : %s"
+
+#: admin/admin.php:417
+msgid "Security check failed."
+msgstr "Le contrôle de sécurité a échoué."
+
+#: admin/admin.php:430
+msgid "Failed to determine current host."
+msgstr "Échec de la détermination de l'hôte actuel."
+
+#: admin/admin.php:440
+msgid "Cache has been purged successfully."
+msgstr "La cache a été purgé avec succès."
+
+#: admin/admin.php:441
+msgid "Failed to purge cache. Please check your settings."
+msgstr "Échec de la purge de la cache. Veuillez vérifier vos paramètres."
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:56
+msgid "View details"
+msgstr "Voir les détails"
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:79
+#, php-format
+msgid "More information about %s"
+msgstr "Plus d'informations sur %s"
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:130
+msgid "Check for updates"
+msgstr "Vérifier les mises à jour"
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:217
+#, php-format
+msgctxt "the plugin title"
+msgid "The %s plugin is up to date."
+msgstr "Le plugin %s est à jour."
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:219
+#, php-format
+msgctxt "the plugin title"
+msgid "A new version of the %s plugin is available."
+msgstr "Une nouvelle version du plugin %s est disponible."
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:221
+#, php-format
+msgctxt "the plugin title"
+msgid "Could not determine if updates are available for %s."
+msgstr ""
+"Impossible de déterminer si des mises à jour sont disponibles pour %s."
+
+#: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:227
+#, php-format
+msgid "Unknown update checker status \"%s\""
+msgstr "Statut inconnu du vérificateur de mise à jour « %s »"
+
+#: includes/plugin-update-checker/Puc/v5p5/Vcs/PluginUpdateChecker.php:113
+msgid "There is no changelog available."
+msgstr "Il n'y a pas de changelog disponible."
+
+#. Description of the plugin/theme
+msgid "Manage the cache settings and perform purge operations"
+msgstr ""
+"Gérer les paramètres de la cache et effectuer des opérations de purge"
+
+#. Author of the plugin/theme
+msgid "ACARY"
+msgstr "ACARY"
+
+#. Author URI of the plugin/theme
+msgid "https://acary.ca"
+msgstr "https://acary.ca"
