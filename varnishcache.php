@@ -27,78 +27,136 @@ add_action( 'plugins_loaded', function () {
 require_once plugin_dir_path(__FILE__) . '/includes/plugin-update-checker.php';
 
 // Include admin functionality
-add_action('admin_init', function() {
-    if (file_exists(sprintf('%s/.varnish-cache/settings.json', rtrim(getenv('HOME'), '/')))) {
-        require_once plugin_dir_path(__FILE__) . '/admin/admin.php';
+require_once plugin_dir_path(__FILE__) . '/admin/admin.php';
+
+/**
+ * Class to handle service functionality like automatic cache purging
+ */
+class VarnishCache_Service {
+    /**
+     * Initialize the service
+     */
+    public function __construct() {
+        // Purge cache when a post is saved/updated
+        add_action('save_post', [$this, 'purge_on_post_save'], 10, 3);
+        
+        // Purge cache when a post is deleted
+        add_action('delete_post', [$this, 'purge_on_post_delete'], 10);
+        
+        // Purge cache when a comment is added/updated/deleted
+        add_action('comment_post', [$this, 'purge_on_comment_change'], 10);
+        add_action('edit_comment', [$this, 'purge_on_comment_change'], 10);
+        add_action('delete_comment', [$this, 'purge_on_comment_change'], 10);
+        
+        // Purge cache when a term is updated
+        add_action('edit_terms', [$this, 'purge_on_term_change'], 10);
+        add_action('create_term', [$this, 'purge_on_term_change'], 10);
+        add_action('delete_term', [$this, 'purge_on_term_change'], 10);
     }
-});
-
-
-// add admin top menu
-add_action('admin_bar_menu', function ($adminbar) {
-    if( !current_user_can('manage_options') ) return;
     
-    $admin_bar_nodes = [
-        [
-            'id'     => 'varnishcache',
-            'title'  => __('Cache', 'varnishcache'),
-            'meta'   => ['class' => 'varnishcache'],
-        ],
-        [
-            'parent' => 'varnishcache',
-            'id'     => 'varnishcache-purge',
-            'title'  => __('Purge all', 'varnishcache'),
-            'href'   => wp_nonce_url(add_query_arg('varnishcache', 'purge-entire-cache'), 'purge-entire-cache'),
-            'meta'   => [
-                'title' => __( 'Purge all', 'varnishcache' ),
-            ],
-        ],
-        [
-            'parent' => 'varnishcache',
-            'id'     => 'varnishcache-settings',
-            'title'  => __('Settings', 'varnishcache'),
-            'href'   => admin_url('options-general.php?page=varnishcache-settings'),
-            'meta'   => [ 'tabindex' => '0' ],
-        ],
-    ];
-    foreach ($admin_bar_nodes as $node) {
-        $adminbar->add_node($node);
+    /**
+     * Purge cache when a post is saved
+     * 
+     * @param int $post_id The post ID
+     * @param WP_Post $post The post object
+     * @param bool $update Whether this is an update
+     */
+    public function purge_on_post_save($post_id, $post, $update) {
+        // Skip if this is an autosave
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+        
+        // Skip if this is a revision
+        if (wp_is_post_revision($post_id)) {
+            return;
+        }
+        
+        // Skip if this is not a public post type
+        $post_type = get_post_type($post_id);
+        if (!get_post_type_object($post_type)->public) {
+            return;
+        }
+        
+        // Purge the cache
+        $this->purge_site_cache();
     }
-}, 100);
-
-// Handle cache purge from admin bar
-add_action('admin_init', function() {
-    if (isset($_GET['varnishcache']) && 'purge-entire-cache' == sanitize_text_field($_GET['varnishcache'])) {
-        // Verify nonce
-        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'purge-entire-cache')) {
-            wp_die(__('Security check failed.', 'varnishcache'));
+    
+    /**
+     * Purge cache when a post is deleted
+     * 
+     * @param int $post_id The post ID
+     */
+    public function purge_on_post_delete($post_id) {
+        // Skip if this is a revision
+        if (wp_is_post_revision($post_id)) {
+            return;
         }
         
-        // Verify permissions
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have permission to purge the cache.', 'varnishcache'));
+        // Purge the cache
+        $this->purge_site_cache();
+    }
+    
+    /**
+     * Purge cache when a comment is changed
+     * 
+     * @param int $comment_id The comment ID
+     */
+    public function purge_on_comment_change($comment_id) {
+        $this->purge_site_cache();
+    }
+    
+    /**
+     * Purge cache when a term is changed
+     * 
+     * @param int $term_id The term ID
+     */
+    public function purge_on_term_change($term_id) {
+        $this->purge_site_cache();
+    }
+    
+    /**
+     * Purge the entire site cache
+     */
+    private function purge_site_cache() {
+        global $varnishcache_admin;
+        
+        // Check if admin is initialized
+        if (!$varnishcache_admin) {
+            return;
         }
         
+        // Get the settings
+        $settings = $varnishcache_admin->get_cache_settings();
+        
+        // Check if cache is enabled
+        if (empty($settings['enabled']) || $settings['cache_devmode']) {
+            return;
+        }
+        
+        // Get the host
         $host = (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) 
             ? sanitize_text_field($_SERVER['HTTP_HOST']) 
             : '';
             
-        if (!empty($host)) {
-            global $varnishcache_admin;
-            if (isset($varnishcache_admin)) {
-                $varnishcache_admin->purge_host($host);
-                
-                // Add admin notice
-                add_action('admin_notices', function() {
-                    echo '<div class="notice notice-success is-dismissible"><p>' 
-                        . __('Cache has been purged successfully.', 'varnishcache') 
-                        . '</p></div>';
-                });
-            }
+        if (empty($host)) {
+            return;
         }
+        
+        // Purge the cache
+        $varnishcache_admin->purge_host($host);
     }
-});
+}
 
+/**
+ * Initialize service functionality
+ */
+function varnishcache_service_init() {
+    global $varnishcache_service;
+    $varnishcache_service = new VarnishCache_Service();
+}
+// Initialize service functionality when plugins are loaded
+add_action('plugins_loaded', 'varnishcache_service_init');
 
 /**
  * Activation and deactivation functions for the plugin
