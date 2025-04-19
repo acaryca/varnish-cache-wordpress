@@ -36,6 +36,9 @@ class VarnishCache_Admin {
         // Handle settings save
         add_action('admin_init', [$this, 'handle_settings_save']);
         
+        // Handle auto purge settings save
+        add_action('admin_init', [$this, 'handle_auto_purge_settings_save']);
+        
         // Add admin bar menu
         add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
     }
@@ -142,6 +145,9 @@ class VarnishCache_Admin {
                 <a href="?page=varnishcache-settings&tab=settings" class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Settings', 'varnishcache'); ?>
                 </a>
+                <a href="?page=varnishcache-settings&tab=auto-purge" class="nav-tab <?php echo $active_tab === 'auto-purge' ? 'nav-tab-active' : ''; ?>">
+                    <?php _e('Auto Purge', 'varnishcache'); ?>
+                </a>
                 <a href="?page=varnishcache-settings&tab=tools" class="nav-tab <?php echo $active_tab === 'tools' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Tools', 'varnishcache'); ?>
                 </a>
@@ -204,6 +210,36 @@ class VarnishCache_Admin {
                     
                     <?php submit_button(); ?>
                 </form>
+            <?php elseif ($active_tab === 'auto-purge') : ?>
+                <form method="post" action="">
+                    <input type="hidden" name="varnishcache_auto_purge_save" value="1" />
+                    <?php wp_nonce_field('varnishcache_auto_purge_settings', 'varnishcache_auto_purge_nonce'); ?>
+                    
+                    <table class="form-table">
+                        <tr valign="top">
+                            <th scope="row"><?php _e('Enable Auto Purge', 'varnishcache'); ?></th>
+                            <td>
+                                <input type="checkbox" name="auto_purge_enabled" value="1" <?php checked(get_option('varnishcache_auto_purge_enabled', false), true); ?> />
+                                <p class="description"><?php _e('Enable automatic cache purging.', 'varnishcache'); ?></p>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row"><?php _e('Purge Frequency', 'varnishcache'); ?></th>
+                            <td>
+                                <select name="auto_purge_frequency">
+                                    <option value="thirtyminutes" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'thirtyminutes'); ?>><?php _e('Every 30 Minutes', 'varnishcache'); ?></option>
+                                    <option value="hourly" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'hourly'); ?>><?php _e('Hourly', 'varnishcache'); ?></option>
+                                    <option value="twicedaily" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'twicedaily'); ?>><?php _e('Twice Daily', 'varnishcache'); ?></option>
+                                    <option value="daily" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'daily'); ?>><?php _e('Daily', 'varnishcache'); ?></option>
+                                    <option value="weekly" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'weekly'); ?>><?php _e('Weekly', 'varnishcache'); ?></option>
+                                </select>
+                                <p class="description"><?php _e('How often to automatically purge the cache.', 'varnishcache'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <?php submit_button(__('Save Auto Purge Settings', 'varnishcache')); ?>
+                </form>
             <?php elseif ($active_tab === 'tools') : ?>
                 <div class="card">
                     <h2><?php _e('Cache Management', 'varnishcache'); ?></h2>
@@ -256,6 +292,63 @@ class VarnishCache_Admin {
         
         // Redirect to prevent form resubmission
         wp_redirect(admin_url('options-general.php?page=varnishcache-settings'));
+        exit;
+    }
+    
+    /**
+     * Handle auto purge settings form submission
+     */
+    public function handle_auto_purge_settings_save() {
+        if (!isset($_POST['varnishcache_auto_purge_save'])) {
+            return;
+        }
+        
+        // Verify permissions
+        if (!current_user_can('manage_options')) {
+            wp_die(__('Sorry, you do not have permission to access this page.', 'varnishcache'));
+        }
+        
+        // Verify nonce
+        if (!isset($_POST['varnishcache_auto_purge_nonce']) || !wp_verify_nonce($_POST['varnishcache_auto_purge_nonce'], 'varnishcache_auto_purge_settings')) {
+            wp_die(__('Security check failed.', 'varnishcache'));
+        }
+        
+        // Get current settings for comparison
+        $current_enabled = get_option('varnishcache_auto_purge_enabled', false);
+        $current_frequency = get_option('varnishcache_auto_purge_frequency', 'daily');
+        
+        // Get new settings
+        $new_enabled = isset($_POST['auto_purge_enabled']) && $_POST['auto_purge_enabled'] === '1';
+        $new_frequency = sanitize_text_field($_POST['auto_purge_frequency']);
+        
+        // Update options
+        update_option('varnishcache_auto_purge_enabled', $new_enabled);
+        update_option('varnishcache_auto_purge_frequency', $new_frequency);
+        
+        // Handle cron job scheduling
+        if ($new_enabled) {
+            // Clear existing scheduled hook
+            wp_clear_scheduled_hook('varnishcache_auto_purge_hook');
+            
+            // Schedule new hook with selected frequency
+            if (!wp_next_scheduled('varnishcache_auto_purge_hook')) {
+                wp_schedule_event(time(), $new_frequency, 'varnishcache_auto_purge_hook');
+            }
+        } else {
+            // If auto purge is disabled, clear the scheduled hook
+            wp_clear_scheduled_hook('varnishcache_auto_purge_hook');
+        }
+        
+        // Set success message
+        set_transient('varnishcache_admin_notices', [
+            [
+                'type' => 'success',
+                'message' => __('Auto Purge settings saved successfully.', 'varnishcache')
+            ]
+        ], 30);
+        
+        // Redirect to prevent form resubmission
+        wp_redirect(admin_url('options-general.php?page=varnishcache-settings&tab=auto-purge'));
         exit;
     }
     

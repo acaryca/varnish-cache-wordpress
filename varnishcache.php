@@ -30,6 +30,22 @@ require_once plugin_dir_path(__FILE__) . '/includes/plugin-update-checker.php';
 require_once plugin_dir_path(__FILE__) . '/admin/admin.php';
 
 /**
+ * Add custom cron schedules
+ *
+ * @param array $schedules Existing schedules
+ * @return array Modified schedules
+ */
+function varnishcache_add_cron_schedules($schedules) {
+    // Add a '30 minutes' schedule to the existing ones
+    $schedules['thirtyminutes'] = array(
+        'interval' => 1800, // 30 minutes in seconds
+        'display'  => __('Every 30 Minutes', 'varnishcache')
+    );
+    return $schedules;
+}
+add_filter('cron_schedules', 'varnishcache_add_cron_schedules');
+
+/**
  * Class to handle service functionality like automatic cache purging
  */
 class VarnishCache_Service {
@@ -52,6 +68,9 @@ class VarnishCache_Service {
         add_action('edit_terms', [$this, 'purge_on_term_change'], 10);
         add_action('create_term', [$this, 'purge_on_term_change'], 10);
         add_action('delete_term', [$this, 'purge_on_term_change'], 10);
+        
+        // Register cron hook for auto purge
+        add_action('varnishcache_auto_purge_hook', [$this, 'run_auto_purge']);
     }
     
     /**
@@ -146,6 +165,31 @@ class VarnishCache_Service {
         // Purge the cache
         $varnishcache_admin->purge_host($host);
     }
+    
+    /**
+     * Run the automatic cache purge
+     */
+    public function run_auto_purge() {
+        // Check if auto purge is enabled
+        if (!get_option('varnishcache_auto_purge_enabled', false)) {
+            return;
+        }
+        
+        // Get the host
+        $host = (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) 
+            ? sanitize_text_field($_SERVER['HTTP_HOST']) 
+            : parse_url(get_site_url(), PHP_URL_HOST);
+            
+        if (empty($host)) {
+            return;
+        }
+        
+        // Purge the cache
+        $this->purge_site_cache();
+        
+        // Log the auto purge event
+        error_log(sprintf('Varnish Cache auto purge executed at %s', date('Y-m-d H:i:s')));
+    }
 }
 
 /**
@@ -162,11 +206,23 @@ add_action('plugins_loaded', 'varnishcache_service_init');
  * Activation and deactivation functions for the plugin
  */
 function varnishcache_activate() {
-    // Nothing to do for now
+    // Schedule auto purge if enabled
+    if (get_option('varnishcache_auto_purge_enabled', false)) {
+        $frequency = get_option('varnishcache_auto_purge_frequency', 'daily');
+        
+        // Clear any existing scheduled hook
+        wp_clear_scheduled_hook('varnishcache_auto_purge_hook');
+        
+        // Schedule new hook with selected frequency
+        if (!wp_next_scheduled('varnishcache_auto_purge_hook')) {
+            wp_schedule_event(time(), $frequency, 'varnishcache_auto_purge_hook');
+        }
+    }
 }
 register_activation_hook(__FILE__, 'varnishcache_activate');
 
 function varnishcache_deactivate() {
-    // Nothing to do for now
+    // Clear scheduled hook on plugin deactivation
+    wp_clear_scheduled_hook('varnishcache_auto_purge_hook');
 }
 register_deactivation_hook(__FILE__, 'varnishcache_deactivate');
