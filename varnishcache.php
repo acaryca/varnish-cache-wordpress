@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Varnish Cache
  * Description: Manage the cache settings and perform purge operations
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: ACARY
  * Author URI: https://acary.ca
  * Text Domain: varnishcache
