@@ -2,6 +2,8 @@
 
 Manage the cache settings and perform purge operations
 
+![AI App Tray Banner](/assets/banner-1544x500.jpg)
+
 ## Installation
 
 1. Download the plugin from the GitHub release page.
