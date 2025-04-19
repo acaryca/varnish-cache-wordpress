@@ -46,6 +46,64 @@ function varnishcache_add_cron_schedules($schedules) {
 add_filter('cron_schedules', 'varnishcache_add_cron_schedules');
 
 /**
+ * Handle auto purge settings form submission
+ */
+function varnishcache_handle_auto_purge_settings_save() {
+    if (!isset($_POST['varnishcache_auto_purge_save'])) {
+        return;
+    }
+    
+    // Verify permissions
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Sorry, you do not have permission to access this page.', 'varnishcache'));
+    }
+    
+    // Verify nonce
+    if (!isset($_POST['varnishcache_auto_purge_nonce']) || !wp_verify_nonce($_POST['varnishcache_auto_purge_nonce'], 'varnishcache_auto_purge_settings')) {
+        wp_die(__('Security check failed.', 'varnishcache'));
+    }
+    
+    // Get current settings for comparison
+    $current_enabled = get_option('varnishcache_auto_purge_enabled', false);
+    $current_frequency = get_option('varnishcache_auto_purge_frequency', 'daily');
+    
+    // Get new settings
+    $new_enabled = isset($_POST['auto_purge_enabled']) && $_POST['auto_purge_enabled'] === '1';
+    $new_frequency = sanitize_text_field($_POST['auto_purge_frequency']);
+    
+    // Update options
+    update_option('varnishcache_auto_purge_enabled', $new_enabled);
+    update_option('varnishcache_auto_purge_frequency', $new_frequency);
+    
+    // Handle cron job scheduling
+    if ($new_enabled) {
+        // Clear existing scheduled hook
+        wp_clear_scheduled_hook('varnishcache_auto_purge_hook');
+        
+        // Schedule new hook with selected frequency
+        if (!wp_next_scheduled('varnishcache_auto_purge_hook')) {
+            wp_schedule_event(time(), $new_frequency, 'varnishcache_auto_purge_hook');
+        }
+    } else {
+        // If auto purge is disabled, clear the scheduled hook
+        wp_clear_scheduled_hook('varnishcache_auto_purge_hook');
+    }
+    
+    // Set success message
+    set_transient('varnishcache_admin_notices', [
+        [
+            'type' => 'success',
+            'message' => __('Auto Purge settings saved successfully.', 'varnishcache')
+        ]
+    ], 30);
+    
+    // Redirect to prevent form resubmission
+    wp_redirect(admin_url('options-general.php?page=varnishcache-settings&tab=auto-purge'));
+    exit;
+}
+add_action('admin_init', 'varnishcache_handle_auto_purge_settings_save');
+
+/**
  * Class to handle service functionality like automatic cache purging
  */
 class VarnishCache_Service {
@@ -201,6 +259,79 @@ function varnishcache_service_init() {
 }
 // Initialize service functionality when plugins are loaded
 add_action('plugins_loaded', 'varnishcache_service_init');
+
+/**
+ * Handle cache purge requests
+ */
+function varnishcache_handle_cache_purge() {
+    global $varnishcache_admin;
+    
+    // Check if we have a purge request
+    if (!isset($_GET['varnishcache']) || 'purge-entire-cache' != sanitize_text_field($_GET['varnishcache'])) {
+        return;
+    }
+    
+    // Verify nonce
+    if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'purge-entire-cache')) {
+        wp_die(__('Security check failed.', 'varnishcache'));
+    }
+    
+    // Verify permissions
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Sorry, you do not have permission to access this page.', 'varnishcache'));
+    }
+    
+    $host = (isset($_SERVER['HTTP_HOST']) && !empty(sanitize_text_field($_SERVER['HTTP_HOST']))) 
+        ? sanitize_text_field($_SERVER['HTTP_HOST']) 
+        : '';
+        
+    if (empty($host)) {
+        wp_die(__('Failed to determine current host.', 'varnishcache'));
+    }
+    
+    $result = $varnishcache_admin->purge_host($host);
+    
+    // Store message in transient
+    set_transient('varnishcache_admin_notices', [
+        [
+            'type' => $result ? 'success' : 'error',
+            'message' => $result 
+                ? __('Cache has been purged successfully.', 'varnishcache')
+                : __('Failed to purge cache. Please check your settings.', 'varnishcache')
+        ]
+    ], 30);
+    
+    // Check if the request is coming from the admin bar or elsewhere
+    $referer = wp_get_referer();
+    
+    if ($referer) {
+        // Extract tab from referer if it exists
+        if (strpos($referer, 'page=varnishcache-settings') !== false) {
+            // This is from our settings page, preserve the current tab
+            $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : '';
+            if (empty($tab)) {
+                // Try to extract tab from referer
+                $tab_pos = strpos($referer, 'tab=');
+                if ($tab_pos !== false) {
+                    $tab_part = substr($referer, $tab_pos + 4);
+                    $tab_end = strpos($tab_part, '&');
+                    $tab = $tab_end !== false ? substr($tab_part, 0, $tab_end) : $tab_part;
+                } else {
+                    $tab = 'settings'; // Default tab
+                }
+            }
+            wp_redirect(admin_url('options-general.php?page=varnishcache-settings&tab=' . $tab));
+        } else {
+            // Not from settings page, redirect back to referer
+            wp_safe_redirect($referer);
+        }
+    } else {
+        // No referer, default to settings page
+        wp_redirect(admin_url('options-general.php?page=varnishcache-settings'));
+    }
+    exit;
+}
+add_action('admin_init', 'varnishcache_handle_cache_purge');
 
 /**
  * Activation and deactivation functions for the plugin

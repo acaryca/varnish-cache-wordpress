@@ -30,17 +30,14 @@ class VarnishCache_Admin {
         // Show admin notices
         add_action('admin_notices', [$this, 'show_admin_notices']);
         
-        // Handle cache purge requests
-        add_action('admin_init', [$this, 'handle_cache_purge']);
-        
-        // Handle settings save
-        add_action('admin_init', [$this, 'handle_settings_save']);
-        
-        // Handle auto purge settings save
-        add_action('admin_init', [$this, 'handle_auto_purge_settings_save']);
-        
         // Add admin bar menu
         add_action('admin_bar_menu', [$this, 'add_admin_bar_menu'], 100);
+
+        // Handle settings save
+        add_action('admin_init', [$this, 'varnishcache_handle_settings_save']);
+
+        // Handle auto purge settings save
+        add_action('admin_init', [$this, 'handle_auto_purge_settings_save']);
     }
     
     /**
@@ -135,8 +132,6 @@ class VarnishCache_Admin {
         // Get active tab
         $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'settings';
         
-        // Get current settings
-        $settings = $this->get_cache_settings();
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -153,114 +148,31 @@ class VarnishCache_Admin {
                 </a>
             </h2>
             
-            <?php if ($active_tab === 'settings') : ?>
-                <form method="post" action="">
-                    <input type="hidden" name="varnishcache_save" value="1" />
-                    <table class="form-table">
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Enable Varnish Cache', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="checkbox" name="enabled" value="1" <?php checked($settings['enabled'], true); ?> />
-                                <p class="description"><?php _e('Enable or disable Varnish Cache integration.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Varnish Server', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="text" name="server" value="<?php echo esc_attr($settings['server']); ?>" class="regular-text" required />
-                                <p class="description"><?php _e('Varnish server address (e.g. localhost:6081).', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Cache Lifetime', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="text" name="cache_lifetime" value="<?php echo esc_attr($settings['cacheLifetime']); ?>" class="regular-text" required />
-                                <p class="description"><?php _e('Cache lifetime in seconds.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Cache Tag Prefix', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="text" name="cache_tag_prefix" value="<?php echo esc_attr($settings['cacheTagPrefix']); ?>" class="regular-text" />
-                                <p class="description"><?php _e('Prefix for cache tags.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Excluded Params', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="text" name="excluded_params" value="<?php echo esc_attr(implode(',', $settings['excludedParams'])); ?>" class="regular-text" />
-                                <p class="description"><?php _e('List of GET parameters to disable caching. Separate with commas.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Excludes', 'varnishcache'); ?></th>
-                            <td>
-                                <textarea name="excludes" rows="6" class="large-text"><?php echo esc_textarea(implode("\n", $settings['excludes'])); ?></textarea>
-                                <p class="description"><?php _e('URLs that Varnish Cache shouldn\'t cache. One URL per line.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Development Mode', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="checkbox" name="cache_devmode" value="1" <?php checked($settings['cache_devmode'], true); ?> />
-                                <p class="description"><?php _e('Enable development mode (disables cache).', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <?php submit_button(); ?>
-                </form>
-            <?php elseif ($active_tab === 'auto-purge') : ?>
-                <form method="post" action="">
-                    <input type="hidden" name="varnishcache_auto_purge_save" value="1" />
-                    <?php wp_nonce_field('varnishcache_auto_purge_settings', 'varnishcache_auto_purge_nonce'); ?>
-                    
-                    <table class="form-table">
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Enable Auto Purge', 'varnishcache'); ?></th>
-                            <td>
-                                <input type="checkbox" name="auto_purge_enabled" value="1" <?php checked(get_option('varnishcache_auto_purge_enabled', false), true); ?> />
-                                <p class="description"><?php _e('Enable automatic cache purging.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                        <tr valign="top">
-                            <th scope="row"><?php _e('Purge Frequency', 'varnishcache'); ?></th>
-                            <td>
-                                <select name="auto_purge_frequency">
-                                    <option value="thirtyminutes" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'thirtyminutes'); ?>><?php _e('Every 30 Minutes', 'varnishcache'); ?></option>
-                                    <option value="hourly" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'hourly'); ?>><?php _e('Hourly', 'varnishcache'); ?></option>
-                                    <option value="twicedaily" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'twicedaily'); ?>><?php _e('Twice Daily', 'varnishcache'); ?></option>
-                                    <option value="daily" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'daily'); ?>><?php _e('Daily', 'varnishcache'); ?></option>
-                                    <option value="weekly" <?php selected(get_option('varnishcache_auto_purge_frequency', 'daily'), 'weekly'); ?>><?php _e('Weekly', 'varnishcache'); ?></option>
-                                </select>
-                                <p class="description"><?php _e('How often to automatically purge the cache.', 'varnishcache'); ?></p>
-                            </td>
-                        </tr>
-                    </table>
-                    
-                    <?php submit_button(__('Save Auto Purge Settings', 'varnishcache')); ?>
-                </form>
-            <?php elseif ($active_tab === 'tools') : ?>
-                <div class="card">
-                    <h2><?php _e('Cache Management', 'varnishcache'); ?></h2>
-                    <p><?php _e('Use these tools to manage your Varnish Cache.', 'varnishcache'); ?></p>
-                    
-                    <p>
-                        <a href="<?php echo esc_url(wp_nonce_url(add_query_arg('varnishcache', 'purge-entire-cache'), 'purge-entire-cache')); ?>" class="button button-primary">
-                            <?php _e('Purge Entire Cache', 'varnishcache'); ?>
-                        </a>
-                        <span class="description"><?php _e('Purges all cached content from Varnish.', 'varnishcache'); ?></span>
-                    </p>
-                </div>
-            <?php endif; ?>
+            <?php 
+            // Include the appropriate tab file based on the active tab
+            switch ($active_tab) {
+                case 'auto-purge':
+                    require_once plugin_dir_path(__FILE__) . 'tabs/auto-purge.php';
+                    break;
+                case 'tools':
+                    require_once plugin_dir_path(__FILE__) . 'tabs/tools.php';
+                    break;
+                case 'settings':
+                default:
+                    require_once plugin_dir_path(__FILE__) . 'tabs/settings.php';
+                    break;
+            }
+            ?>
         </div>
         <?php
     }
-    
+
     /**
      * Handle settings form submission
      */
-    public function handle_settings_save() {
+    public function varnishcache_handle_settings_save() {
+        global $varnishcache_admin;
+        
         if (!isset($_POST['varnishcache_save'])) {
             return;
         }
@@ -280,7 +192,7 @@ class VarnishCache_Admin {
             'excludes' => array_filter(array_map('trim', explode("\n", sanitize_textarea_field($_POST['excludes']))))
         ];
         
-        $this->write_cache_settings($new_settings);
+        $varnishcache_admin->write_cache_settings($new_settings);
         
         // Set success message
         set_transient('varnishcache_admin_notices', [
@@ -294,7 +206,8 @@ class VarnishCache_Admin {
         wp_redirect(admin_url('options-general.php?page=varnishcache-settings'));
         exit;
     }
-    
+
+
     /**
      * Handle auto purge settings form submission
      */
@@ -494,76 +407,6 @@ class VarnishCache_Admin {
             ], 30);
             return false;
         }
-    }
-    
-    /**
-     * Handle cache purge requests
-     */
-    public function handle_cache_purge() {
-        // Check if we have a purge request
-        if (!isset($_GET['varnishcache']) || 'purge-entire-cache' != sanitize_text_field($_GET['varnishcache'])) {
-            return;
-        }
-        
-        // Verify nonce
-        if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'purge-entire-cache')) {
-            wp_die(__('Security check failed.', 'varnishcache'));
-        }
-        
-        // Verify permissions
-        if (!current_user_can('manage_options')) {
-            wp_die(__('Sorry, you do not have permission to access this page.', 'varnishcache'));
-        }
-        
-        $host = (isset($_SERVER['HTTP_HOST']) && !empty(sanitize_text_field($_SERVER['HTTP_HOST']))) 
-            ? sanitize_text_field($_SERVER['HTTP_HOST']) 
-            : '';
-            
-        if (empty($host)) {
-            wp_die(__('Failed to determine current host.', 'varnishcache'));
-        }
-        
-        $result = $this->purge_host($host);
-        
-        // Store message in transient
-        set_transient('varnishcache_admin_notices', [
-            [
-                'type' => $result ? 'success' : 'error',
-                'message' => $result 
-                    ? __('Cache has been purged successfully.', 'varnishcache')
-                    : __('Failed to purge cache. Please check your settings.', 'varnishcache')
-            ]
-        ], 30);
-        
-        // Check if the request is coming from the admin bar or elsewhere
-        $referer = wp_get_referer();
-        
-        if ($referer) {
-            // Extract tab from referer if it exists
-            if (strpos($referer, 'page=varnishcache-settings') !== false) {
-                // This is from our settings page, preserve the current tab
-                $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : '';
-                if (empty($tab)) {
-                    // Try to extract tab from referer
-                    $tab_pos = strpos($referer, 'tab=');
-                    if ($tab_pos !== false) {
-                        $tab_part = substr($referer, $tab_pos + 4);
-                        $tab_end = strpos($tab_part, '&');
-                        $tab = $tab_end !== false ? substr($tab_part, 0, $tab_end) : $tab_part;
-                    } else {
-                        $tab = 'settings'; // Default tab
-                    }
-                }
-                wp_redirect(admin_url('options-general.php?page=varnishcache-settings&tab=' . $tab));
-            } else {
-                // Not from settings page, redirect back to referer
-                wp_safe_redirect($referer);
-            }
-        } else {
-            // No referer, default to settings page
-            wp_redirect(admin_url('options-general.php?page=varnishcache-settings'));
-        }
-        exit;
     }
     
     /**
