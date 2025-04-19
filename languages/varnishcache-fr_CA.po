@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Varnish Cache\n"
-"POT-Creation-Date: 2025-04-19 18:18-0400\n"
-"PO-Revision-Date: 2025-04-19 18:25-0400\n"
+"POT-Creation-Date: 2025-04-19 19:02-0400\n"
+"PO-Revision-Date: 2025-04-19 19:04-0400\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: fr_CA\n"
@@ -15,8 +15,8 @@ msgstr ""
 "X-Poedit-WPHeader: varnishcache.php\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
-"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;"
-"_n_noop:1,2;_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
 "X-Poedit-SearchPath-0: .\n"
 "X-Poedit-SearchPathExcluded-0: *.min.js\n"
 "X-Poedit-SearchPathExcluded-1: includes/plugin-update-checker/vendor\n"
@@ -34,121 +34,157 @@ msgstr "Cache"
 msgid "Purge All Cache"
 msgstr "Vider la cache"
 
-#: admin/admin.php:89 admin/admin.php:118 admin/admin.php:143
+#: admin/admin.php:89 admin/admin.php:118 admin/admin.php:141
 msgid "Settings"
 msgstr "Paramètres"
 
-#: admin/admin.php:129 admin/admin.php:234 admin/admin.php:422
+#: admin/admin.php:129 admin/admin.php:182 admin/admin.php:221
+#: varnishcache.php:58 varnishcache.php:281
 msgid "Sorry, you do not have permission to access this page."
 msgstr "Désolé, vous n'avez pas l'autorisation d'accéder à cette page."
 
-#: admin/admin.php:146
+#: admin/admin.php:144
+msgid "Auto Purge"
+msgstr "Purge automatique"
+
+#: admin/admin.php:147
 msgid "Tools"
 msgstr "Outils"
 
-#: admin/admin.php:155
+#: admin/admin.php:201
+msgid "Settings saved successfully."
+msgstr "Les paramètres ont été enregistrés avec succès."
+
+#: admin/admin.php:226 varnishcache.php:63 varnishcache.php:276
+msgid "Security check failed."
+msgstr "Le contrôle de sécurité a échoué."
+
+#: admin/admin.php:259 varnishcache.php:96
+msgid "Auto Purge settings saved successfully."
+msgstr "Les paramètres de purge automatique ont été enregistrés avec succès."
+
+#: admin/admin.php:374
+msgid "No Varnish server configured."
+msgstr "Aucun serveur Varnish n'est configuré."
+
+#: admin/admin.php:405
+#, php-format
+msgid "Varnish Cache Purge Failed: %s"
+msgstr "Échec de la purge du cache Varnish : %s"
+
+#: admin/tabs/auto-purge.php:21
+msgid "Enable Auto Purge"
+msgstr "Activer la purge automatique"
+
+#: admin/tabs/auto-purge.php:24
+msgid "Enable automatic cache purging."
+msgstr "Active la purge automatique de la cache."
+
+#: admin/tabs/auto-purge.php:28
+msgid "Purge Frequency"
+msgstr "Fréquence de la purge"
+
+#: admin/tabs/auto-purge.php:31 varnishcache.php:42
+msgid "Every 30 Minutes"
+msgstr "Toutes les 30 minutes"
+
+#: admin/tabs/auto-purge.php:32
+msgid "Hourly"
+msgstr "Chaque heures"
+
+#: admin/tabs/auto-purge.php:33
+msgid "Twice Daily"
+msgstr "Deux fois par jour"
+
+#: admin/tabs/auto-purge.php:34
+msgid "Daily"
+msgstr "Chaque jour"
+
+#: admin/tabs/auto-purge.php:35
+msgid "Weekly"
+msgstr "Chaque semaine"
+
+#: admin/tabs/auto-purge.php:37
+msgid "How often to automatically purge the cache."
+msgstr "Fréquence de purge automatique du cache."
+
+#: admin/tabs/auto-purge.php:42
+msgid "Save Auto Purge Settings"
+msgstr "Sauvegarder les paramètres de purge automatique"
+
+#: admin/tabs/settings.php:22
 msgid "Enable Varnish Cache"
 msgstr "Activer la cache Varnish"
 
-#: admin/admin.php:158
+#: admin/tabs/settings.php:25
 msgid "Enable or disable Varnish Cache integration."
 msgstr "Activer ou désactiver l'intégration de la cache Varnish."
 
-#: admin/admin.php:162
+#: admin/tabs/settings.php:29
 msgid "Varnish Server"
 msgstr "Serveur Varnish"
 
-#: admin/admin.php:165
+#: admin/tabs/settings.php:32
 msgid "Varnish server address (e.g. localhost:6081)."
 msgstr "Adresse du serveur Varnish (par exemple, localhost:6081)."
 
-#: admin/admin.php:169
+#: admin/tabs/settings.php:36
 msgid "Cache Lifetime"
 msgstr "Durée de vie de la cache"
 
-#: admin/admin.php:172
+#: admin/tabs/settings.php:39
 msgid "Cache lifetime in seconds."
 msgstr "Durée de vie de la cache en secondes."
 
-#: admin/admin.php:176
+#: admin/tabs/settings.php:43
 msgid "Cache Tag Prefix"
 msgstr "Préfixe des balises de cache"
 
-#: admin/admin.php:179
+#: admin/tabs/settings.php:46
 msgid "Prefix for cache tags."
 msgstr "Préfixe pour les balises de cache."
 
-#: admin/admin.php:183
+#: admin/tabs/settings.php:50
 msgid "Excluded Params"
 msgstr "Paramètres exclus"
 
-#: admin/admin.php:186
+#: admin/tabs/settings.php:53
 msgid "List of GET parameters to disable caching. Separate with commas."
 msgstr ""
 "Liste des paramètres GET pour désactiver la mise en cache. Séparer par des "
 "virgules."
 
-#: admin/admin.php:190
+#: admin/tabs/settings.php:57
 msgid "Excludes"
 msgstr "Non inclus"
 
-#: admin/admin.php:193
+#: admin/tabs/settings.php:60
 msgid "URLs that Varnish Cache shouldn't cache. One URL per line."
-msgstr ""
-"URLs que Varnish Cache ne doit pas mettre en cache. Une URL par ligne."
+msgstr "URLs que Varnish Cache ne doit pas mettre en cache. Une URL par ligne."
 
-#: admin/admin.php:197
+#: admin/tabs/settings.php:64
 msgid "Development Mode"
 msgstr "Mode développement"
 
-#: admin/admin.php:200
+#: admin/tabs/settings.php:67
 msgid "Enable development mode (disables cache)."
 msgstr "Active le mode développement (désactive la cache)."
 
-#: admin/admin.php:209
+#: admin/tabs/tools.php:15
 msgid "Cache Management"
 msgstr "Gestion du cache"
 
-#: admin/admin.php:210
+#: admin/tabs/tools.php:16
 msgid "Use these tools to manage your Varnish Cache."
 msgstr "Utilisez ces outils pour gérer votre cache Varnish."
 
-#: admin/admin.php:214
+#: admin/tabs/tools.php:20
 msgid "Purge Entire Cache"
 msgstr "Purger tout la cache"
 
-#: admin/admin.php:216
+#: admin/tabs/tools.php:22
 msgid "Purges all cached content from Varnish."
 msgstr "Purge tous les contenus mis en cache par Varnish."
-
-#: admin/admin.php:253
-msgid "Settings saved successfully."
-msgstr "Les paramètres ont été enregistrés avec succès."
-
-#: admin/admin.php:368
-msgid "No Varnish server configured."
-msgstr "Aucun serveur Varnish n'est configuré."
-
-#: admin/admin.php:399
-#, php-format
-msgid "Varnish Cache Purge Failed: %s"
-msgstr "Échec de la purge du cache Varnish : %s"
-
-#: admin/admin.php:417
-msgid "Security check failed."
-msgstr "Le contrôle de sécurité a échoué."
-
-#: admin/admin.php:430
-msgid "Failed to determine current host."
-msgstr "Échec de la détermination de l'hôte actuel."
-
-#: admin/admin.php:440
-msgid "Cache has been purged successfully."
-msgstr "La cache a été purgé avec succès."
-
-#: admin/admin.php:441
-msgid "Failed to purge cache. Please check your settings."
-msgstr "Échec de la purge de la cache. Veuillez vérifier vos paramètres."
 
 #: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:56
 msgid "View details"
@@ -179,8 +215,7 @@ msgstr "Une nouvelle version du plugin %s est disponible."
 #, php-format
 msgctxt "the plugin title"
 msgid "Could not determine if updates are available for %s."
-msgstr ""
-"Impossible de déterminer si des mises à jour sont disponibles pour %s."
+msgstr "Impossible de déterminer si des mises à jour sont disponibles pour %s."
 
 #: includes/plugin-update-checker/Puc/v5p5/Plugin/Ui.php:227
 #, php-format
@@ -191,10 +226,21 @@ msgstr "Statut inconnu du vérificateur de mise à jour « %s »"
 msgid "There is no changelog available."
 msgstr "Il n'y a pas de changelog disponible."
 
+#: varnishcache.php:289
+msgid "Failed to determine current host."
+msgstr "Échec de la détermination de l'hôte actuel."
+
+#: varnishcache.php:299
+msgid "Cache has been purged successfully."
+msgstr "La cache a été purgé avec succès."
+
+#: varnishcache.php:300
+msgid "Failed to purge cache. Please check your settings."
+msgstr "Échec de la purge de la cache. Veuillez vérifier vos paramètres."
+
 #. Description of the plugin/theme
 msgid "Manage the cache settings and perform purge operations"
-msgstr ""
-"Gérer les paramètres de la cache et effectuer des opérations de purge"
+msgstr "Gérer les paramètres de la cache et effectuer des opérations de purge"
 
 #. Author of the plugin/theme
 msgid "ACARY"
