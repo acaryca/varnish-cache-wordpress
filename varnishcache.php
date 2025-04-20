@@ -205,23 +205,32 @@ class VarnishCache_Service {
         
         // Get the settings
         $settings = $varnishcache_admin->get_cache_settings();
-        
+
         // Check if cache is enabled
         if (empty($settings['enabled']) || $settings['cache_devmode']) {
             return;
         }
         
         // Get the host
-        $host = (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) 
-            ? sanitize_text_field($_SERVER['HTTP_HOST']) 
-            : '';
-            
+        $host = '';
+        
+        if (isset($_SERVER['HTTP_HOST']) && !empty($_SERVER['HTTP_HOST'])) {
+            $host = sanitize_text_field($_SERVER['HTTP_HOST']);
+        } else {
+            // Fallback to site URL if HTTP_HOST is not available
+            $site_url = parse_url(site_url(), PHP_URL_HOST);
+            if (!empty($site_url)) {
+                $host = $site_url;
+            }
+        }
+        
         if (empty($host)) {
             return;
         }
         
         // Purge the cache
-        $varnishcache_admin->purge_host($host);
+        $result = $varnishcache_admin->purge_host($host);
+        #error_log('VarnishCache: Purge result: ' . ($result ? 'success' : 'failed'));
     }
     
     /**
